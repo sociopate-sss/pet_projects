@@ -10,7 +10,7 @@ int main(){
             heap_free(ptrs[i / 2]);
         }
     }
-
+    
     //Wrong arguments cases
     heap_alloc(10000000000);
     heap_free(nullptr);
