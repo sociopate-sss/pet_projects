@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace Core {
 
     // Core definitions
@@ -20,7 +22,7 @@ namespace Core {
 
         U8,
         U16,
-        u32,
+        U32,
         U64,
 
         BOOL,
@@ -28,4 +30,5 @@ namespace Core {
         FLOAT,
         DOUBLE,
     };
+
 }

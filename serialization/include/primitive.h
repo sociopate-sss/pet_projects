@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <stdint.h>
 
@@ -9,6 +10,7 @@
 class Primitive : public Object {
 private: 
     Primitive(const std::string& name, uint8_t wrapper, uint8_t type);
+    Primitive(){}
 
 public:
     Primitive(Primitive&& other);
@@ -30,8 +32,26 @@ public:
     }
 
     inline Core::Type GetType() const { return static_cast<Core::Type>(type_); }
+    inline std::vector<uint8_t> GetData() const { return *data_; }
 
     void serialize(std::vector<uint8_t>& buffer, size_t& iterator) const override;
+
+    static Primitive deserialize(const std::vector<uint8_t>& buffer){
+        Primitive obj;
+        size_t iterator = 0;
+
+        obj.size_ = Core::decode<uint32_t>(buffer, iterator);
+        obj.name_length_ = Core::decode<uint32_t>(buffer, iterator);
+        obj.name_ = Core::decode<std::string>(buffer, iterator);
+        obj.wrapper_ = Core::decode<uint8_t>(buffer, iterator);
+
+        obj.type_ = Core::decode<uint8_t>(buffer, iterator);
+        obj.data_ = std::make_unique<std::vector<uint8_t>>(
+            std::vector<uint8_t>(GetTypeSize(static_cast<Core::Type>(obj.type_))));
+        Core::decode<uint8_t>(buffer, iterator, *obj.data_);
+
+        return obj;
+    }
 
 private:
     uint8_t type_;

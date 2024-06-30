@@ -11,13 +11,15 @@ namespace Core {
 
     //Utils functions
 
-    void GetTypeSize(Core::Type);
-
     void SerializeNSave(Object* obj);
     
-    void Save(std::string file_name, const std::vector<uint8_t>& buffer);
+    void Save(const std::string& file_name, const std::vector<uint8_t>& buffer);
 
-    // Encoding functions
+    std::vector<uint8_t> Load(const std::string& file_name);
+
+    uint8_t GetTypeSize(Type type);
+
+    // Encoding(serializing) functions
 
     // Integer types encoding
     template<typename T>
@@ -53,6 +55,56 @@ namespace Core {
         for (auto element : value) {
             encode<uint8_t>(buffer, iterator, element);
         }
+    }
+
+    //Decoding(deserializing) functions
+
+    template<typename T>
+    inline T decode(const std::vector<uint8_t>& buffer, size_t& iterator) {
+        T result = 0;
+        T buf;
+
+        for (size_t i = 0; i < sizeof(T); ++i) {    
+            buf = buffer[iterator++] << (8 * (sizeof(T) - (i + 1)));
+            result |= buf;
+        }   
+
+        return result;
+    }
+
+    // Float decoding
+    template<>
+    inline float decode<float>(const std::vector<uint8_t>& buffer, size_t& iterator) {
+        int32_t value = decode<int64_t>(buffer, iterator);
+        return *reinterpret_cast<float*>(&value);
+    }
+
+    // Double decoding
+    template<>
+    inline double decode<double>(const std::vector<uint8_t>& buffer, size_t& iterator) {
+        int64_t value = decode<int64_t>(buffer, iterator);
+        return *reinterpret_cast<double*>(&value);
+    }
+
+    //Vector decoding
+    template<typename T>
+    inline void decode(const std::vector<uint8_t>&buffer, size_t& iterator, std::vector<T>& value) {
+        for (size_t i = 0; i < value.size(); ++i) {
+            value[i] = buffer[iterator++];
+        }
+    }
+   
+    // String decoding
+    // Here we used that the string itself is preceded by its size
+    template<>
+    inline std::string decode<std::string>(const std::vector<uint8_t>&buffer, size_t& iterator) {
+        iterator -= 4;
+        uint32_t length = decode<uint32_t>(buffer, iterator);
+
+        std::string result(buffer.begin() + iterator, buffer.begin() + iterator + length);
+        iterator += length;
+        
+        return result;
     }
 
 }

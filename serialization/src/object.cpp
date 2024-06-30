@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <string_view>
 
 #include "../include/core.h"
