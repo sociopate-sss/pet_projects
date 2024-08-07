@@ -9,9 +9,11 @@ namespace net {
     class ThreadSafeQueue {
     public:
 
+        ThreadSafeQueue() {}
+
         const T& front() {
             if (tsq_.empty()) {
-                throw std::runtime_error("[ERROR] Thread safe queue is empty");
+                throw std::runtime_error("[TCQ ERROR] Thread safe queue is empty");
             }
 
             std::lock_guard<std::mutex> lg(queue_lock_);

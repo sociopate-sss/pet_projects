@@ -4,6 +4,12 @@
 
 template <typename T>
 void net::Connection<T>::SendMessage(const Message<T>& message) {
+
+    if (!IsConnected()) {
+        std::cout << "[Connection #" << connection_id_ << "] Can't send message\n";
+        return;
+    }
+
     asio::post(context_, [&](){
 
         size_t queue_size = outcome_messages_.size();
@@ -23,7 +29,7 @@ void net::Connection<T>::WriteMessageHeader() {
                                 if (!e) {
                                     WriteMessageBody();       
                                 } else {
-                                    std::cout << "[Connection " << connection_id_ << "] Connection can't write MessageHeader\n";
+                                    std::cout << "[Connection #" << connection_id_ << "] Connection can't write MessageHeader\n";
                                     socket_.close();
                                 }
                                 
@@ -44,7 +50,7 @@ void net::Connection<T>::WriteMessageBody() {
                             }
 
                         } else {
-                            std::cout << "[Connection " << connection_id_ << "] Connection can't write MessageBody\n";
+                            std::cout << "[Connection #" << connection_id_ << "] Connection can't write MessageBody\n";
                             socket_.close();
                         }
                     });
@@ -59,7 +65,7 @@ void net::Connection<T>::ReadMessageHeader() {
                         if (!ec) {
                             ReadMessageBody();
                         } else {
-                            std::cout << "[Connection " << connection_id_ << "] Connection can't read MessageHeader\n";
+                            std::cout << "[Connection #" << connection_id_ << "] Connection can't read MessageHeader\n";
                             socket_.close();
                         }
 
@@ -77,7 +83,7 @@ void net::Connection<T>::ReadMessageBody() {
                             
                             ReadMessageHeader();
                         } else {
-                            std::cout << "[Connection " << connection_id_ << "] Connection can't read MessageHeader\n";
+                            std::cout << "[Connection #" << connection_id_ << "] Connection can't read MessageHeader\n";
                             socket_.close();
                         }
 

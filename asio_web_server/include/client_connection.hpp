@@ -7,8 +7,8 @@ namespace net {
     template<typename T>
     class ClientConnection : public Connection<T> {
     public:
-        ClientConnection (asio::ip::tcp::socket socket, ThreadSafeQueue<Message<T>>& income_messages, asio::io_context& context) 
-                    : Connection<T>(socket, income_messages, context) {}
+        ClientConnection (asio::ip::tcp::socket&& socket, ThreadSafeQueue<Message<T>>& income_messages, asio::io_context& context) 
+                    : Connection<T>(std::move(socket), income_messages, context) {}
 
         ~ClientConnection () {
             Disconnect();

@@ -11,7 +11,7 @@ namespace net {
     template<typename T>
     class Connection : public std::enable_shared_from_this<Connection<T>> {
     public:
-        Connection (asio::ip::tcp::socket socket, ThreadSafeQueue<Message<T>>& income_messages, asio::io_context& context) 
+        Connection (asio::ip::tcp::socket&& socket, ThreadSafeQueue<Message<T>>& income_messages, asio::io_context& context) 
                     : socket_(std::move(socket)),  income_messages_(income_messages), context_(context) {}
 
         ~Connection () {
