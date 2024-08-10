@@ -12,7 +12,7 @@ void net::BaseClient<T>::ConnectToServer(const std::string& host, uint16_t port)
         asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, std::to_string(port));
 
         asio::ip::tcp::socket sock(context_);
-        connection_ = std::make_unique<ClientConnection<T>>(
+        connection_ = std::make_shared<ClientConnection<T>>(
                                     std::move(sock), 
                                     income_messages_, 
                                     context_);

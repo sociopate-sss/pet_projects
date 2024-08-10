@@ -21,9 +21,14 @@ namespace net {
 
     template<typename T>
     struct Message {
-        MessageHeader<T> message_header;
-        std::vector<uint8_t> message_body;
-        std::shared_ptr<Connection<T>> connection_ = nullptr;
+        MessageHeader<T> header;
+        std::vector<uint8_t> body;
+    };
+
+    template<typename T>
+    struct LinkedMessage {
+        Message<T> message;
+        std::shared_ptr<Connection<T>> connection = nullptr;
     };
     
 }

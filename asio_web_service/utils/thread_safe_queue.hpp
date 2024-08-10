@@ -17,6 +17,8 @@ namespace net {
             }
 
             std::lock_guard<std::mutex> lg(queue_lock_);
+
+            return tsq_.front();
         }
 
         void push(T&& value) {
