@@ -44,9 +44,10 @@ namespace net {
                 return;
             }
 
-            asio::post(context_, [&](){
+            asio::post(context_, [this, message](){
 
                 size_t queue_size = outcome_messages_.size();
+
                 outcome_messages_.push({message, this->shared_from_this()});
 
                 if (!queue_size) {
@@ -60,9 +61,20 @@ namespace net {
         // It is guaranteed that outcome_message_ and MessageBody of the messages aren't empty 
         void WriteMessageHeader() {
             asio::async_write(socket_, asio::buffer(&outcome_messages_.front().message.header, sizeof(MessageHeader<T>)),
-                                    [&](asio::error_code e, size_t length){
+                                    [this](std::error_code e, size_t length){
+
                                         if (!e) {
-                                            WriteMessageBody();       
+
+                                            if (outcome_messages_.front().message.header.size == 0) {
+                                                outcome_messages_.pop();
+
+                                                if (outcome_messages_.size()) {
+                                                    WriteMessageHeader();
+                                                }
+                                                
+                                            } else {
+                                                WriteMessageBody();       
+                                            }
                                         } else {
                                             std::cout << "[Connection #" << connection_id_ << "] Connection can't write MessageHeader\n";
                                             socket_.close();
@@ -74,7 +86,8 @@ namespace net {
         void WriteMessageBody() {
             asio::async_write(socket_, 
                             asio::buffer(outcome_messages_.front().message.body.data(), outcome_messages_.front().message.body.size()),
-                            [&](asio::error_code e, size_t length) {
+                            [this](std::error_code e, size_t length) {
+
                                 if (!e) {
                                     
                                     outcome_messages_.pop();
@@ -92,13 +105,22 @@ namespace net {
 
         // It is guaranteed that income_message_ and MessageBody of the messages aren't empty
         void ReadMessageHeader() {
-            asio::async_read(socket_, asio::buffer(&temp_message_.message.header, sizeof(temp_message_.message.header)),
-                            [&](asio::error_code ec, size_t length) {
+            asio::async_read(socket_, asio::buffer(&temp_message_.message.header, sizeof(MessageHeader<T>)),
+                            [this](asio::error_code ec, size_t length) {
 
                                 if (!ec) {
-                                    ReadMessageBody();
+
+                                    if (temp_message_.message.header.size == 0){
+                                        AddNewMessage();
+                                        ReadMessageHeader();
+                                    } else {
+                                        temp_message_.message.body.resize(temp_message_.message.header.size);
+                                        ReadMessageBody();
+                                    }
                                 } else {
+                                    setlocale(LC_ALL, "RU");
                                     std::cout << "[Connection #" << connection_id_ << "] Connection can't read MessageHeader\n";
+                                    std::cout << ec.message() << '\n';
                                     socket_.close();
                                 }
 
@@ -106,8 +128,8 @@ namespace net {
         }
 
         void ReadMessageBody() {
-            asio::async_read(socket_, asio::buffer(temp_message_.message.body.data(), sizeof(temp_message_.message.body.size())),
-                            [&](asio::error_code ec, size_t length) {
+            asio::async_read(socket_, asio::buffer(temp_message_.message.body.data(), temp_message_.message.body.size()),
+                            [this](std::error_code ec, size_t length) {
 
                                 if (!ec) {
 
@@ -134,7 +156,7 @@ namespace net {
         ThreadSafeQueue<LinkedMessage<T>> outcome_messages_;
         ThreadSafeQueue<LinkedMessage<T>>& income_messages_;
 
-        uint32_t connection_id_;
+        uint32_t connection_id_ = 0;
 
         LinkedMessage<T> temp_message_;
     };
