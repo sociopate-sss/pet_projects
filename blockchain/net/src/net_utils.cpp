@@ -2,51 +2,51 @@
 #include "asio/ip/address.hpp"
 #include <string>
 
-void net::HTTPHeaderToJson(std::istream& buffer, json& http_header){
+// void net::HTTPHeaderToJson(std::istream& buffer, json& http_header){
 
-    std::string str;
-    bool is_first = true;
+//     std::string str;
+//     bool is_first = true;
 
-    do {
-        if (str.size() && str.back() == '\r') {
-            str.pop_back();
-        }
+//     do {
+//         if (str.size() && str.back() == '\r') {
+//             str.pop_back();
+//         }
 
-        size_t start_ptr = 0;
-        size_t end_ptr = 0;
+//         size_t start_ptr = 0;
+//         size_t end_ptr = 0;
 
-        auto get_next_until = [&](const std::string& delim) {
+//         auto get_next_until = [&](const std::string& delim) {
 
-            end_ptr = str.find(delim, start_ptr);
-            std::string result = str.substr(start_ptr, end_ptr - start_ptr);
-            start_ptr = end_ptr + delim.size();
+//             end_ptr = str.find(delim, start_ptr);
+//             std::string result = str.substr(start_ptr, end_ptr - start_ptr);
+//             start_ptr = end_ptr + delim.size();
 
-            return result;
-        };
+//             return result;
+//         };
 
-        if (is_first) {
+//         if (is_first) {
 
-            if (str.back() != ' ') {
-                str += " ";
-            }
+//             if (str.back() != ' ') {
+//                 str += " ";
+//             }
 
-            for (const std::string& key : {"method", "url", "version"}) {
-                http_header[key] = get_next_until(" ");
-            }
+//             for (const std::string& key : {"method", "url", "version"}) {
+//                 http_header[key] = get_next_until(" ");
+//             }
 
-            is_first = false;
+//             is_first = false;
 
-            continue;   
-        }
+//             continue;   
+//         }
 
-        if (str.back() != '\n') {
-            str += "\n";
-        }
+//         if (str.back() != '\n') {
+//             str += "\n";
+//         }
 
-        http_header[get_next_until(": ")] = get_next_until("\n");
+//         http_header[get_next_until(": ")] = get_next_until("\n");
 
-    } while (std::getline(buffer, str, '\n'));
-}
+//     } while (std::getline(buffer, str, '\n'));
+// }
 
 std::vector<asio::ip::tcp::endpoint> net::EndpointsToVector(const std::string &str) {
     std::vector<asio::ip::tcp::endpoint> endpoints;

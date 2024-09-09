@@ -10,7 +10,7 @@
 #include <asio/ts/buffer.hpp>
 #include <asio/ts/internet.hpp>
 
-#include "../../utils/thread_safe_queue.hpp"
+#include "../../utils/include/thread_safe_queue.hpp"
 
 #include "p2p_message.hpp"
 #include "net_utils.hpp"
@@ -19,13 +19,15 @@
 
 namespace net {
 
-    using TSQ_sh_ptr = std::shared_ptr<ThreadSafeQueue<P2PMessage>>;
-    using TSQ_un_ptr = std::unique_ptr<ThreadSafeQueue<P2PMessage>>;
-
     class Connection : public std::enable_shared_from_this<Connection> {
     public:
-        Connection(asio::ip::tcp::socket&& sock, asio::io_context& context, TSQ_sh_ptr income_messages) 
-                    : socket_(std::move(sock)), context_(context), income_messages_(income_messages) {} 
+        Connection(asio::ip::tcp::socket&& sock, asio::io_context& context, LinkedMessageQueue income_messages, bool start_reading = false) 
+                    : socket_(std::move(sock)), context_(context), income_messages_(income_messages) {
+
+            if (start_reading) {
+                ReadMessageHeader();
+            }
+        } 
 
         ~Connection() {
             Disconnect();
@@ -39,7 +41,7 @@ namespace net {
 
         void ConnectToPeer(const asio::ip::tcp::endpoint& peer) {
             asio::async_connect(socket_, peer, [this](const asio::error_code& ec){
-                if (!ec) {
+                if (!ec) {  
                     ReadMessageHeader();
                 }
             });
@@ -62,6 +64,12 @@ namespace net {
             });
 
         }
+
+        void Setid(size_t new_id) {
+            id_ = new_id;
+        }
+
+        size_t GetId() const { return id_; }
 
     protected:
         void ReadMessageHeader() {
@@ -140,20 +148,25 @@ namespace net {
         }
 
         void AddIncomeMessage() {
-            income_messages_->push({temp_message_header_, json::parse(temp_message_body_)});
+            LinkedP2PMessage message;
+            message.header = temp_message_header_;
+            message.body = json::parse(temp_message_body_);
+            message.connection_ = shared_from_this();
+            
+            income_messages_->push(std::move(message));
         }
 
     protected:
+        size_t id_ = 0;
+
         asio::ip::tcp::socket socket_;
         asio::io_context& context_;
 
         P2PMessageHeader temp_message_header_;
         std::string temp_message_body_;
 
-        TSQ_sh_ptr income_messages_;
-        TSQ_sh_ptr outcome_messages_;
+        LinkedMessageQueue income_messages_;
+        MessageQueue outcome_messages_;
     };
-
-    using Conn_ptr = std::unique_ptr<Connection>;
 
 }

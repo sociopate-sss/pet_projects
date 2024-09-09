@@ -4,6 +4,6 @@
 
 namespace Core {
 
-    std::string sha256(const std::string& text);
+    std::string my_sha256(const std::string& text);
 
 };

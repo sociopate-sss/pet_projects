@@ -10,13 +10,13 @@
 #include <asio/ts/buffer.hpp>
 #include <asio/ts/internet.hpp>
 
-#include "../../utils/json.hpp"
+#include "../../utils/include/json.hpp"
 
 using json = nlohmann::json;
 
 namespace net {
 
-    void HTTPHeaderToJson(std::istream& str, json& http_header);
+    // void HTTPHeaderToJson(std::istream& str, json& http_header);
 
     std::vector<asio::ip::tcp::endpoint> EndpointsToVector(const std::string& str);
 
